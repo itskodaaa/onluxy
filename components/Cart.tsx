@@ -1,31 +1,55 @@
 import React, { useState } from 'react';
 import { useCart } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext';
 import Button from './Button';
 import CloseIcon from './icons/CloseIcon';
 import SpinnerIcon from './icons/SpinnerIcon';
 
 const Cart: React.FC = () => {
   const { isCartOpen, closeCart, cartItems, removeFromCart, updateQuantity, totalPrice, clearCart } = useCart();
+  const { currentUser } = useAuth();
   const [isCheckingOut, setIsCheckingOut] = useState(false);
   const [isOrderPlaced, setIsOrderPlaced] = useState(false);
+  const [formData, setFormData] = useState({
+    name: currentUser?.displayName || '',
+    email: currentUser?.email || '',
+    address: '',
+  });
   
   const handleCheckout = (e: React.FormEvent) => {
     e.preventDefault();
     setIsCheckingOut(true);
+
     // Simulate API call for checkout
     setTimeout(() => {
       setIsCheckingOut(false);
       setIsOrderPlaced(true);
       clearCart();
+      setFormData({ name: '', email: '', address: '' });
     }, 1500);
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
   
   const handleClose = () => {
       closeCart();
       if(isOrderPlaced) {
-          setTimeout(() => setIsOrderPlaced(false), 500); // Reset for next time
+          setTimeout(() => setIsOrderPlaced(false), 500);
       }
   };
+
+  React.useEffect(() => {
+    if (currentUser) {
+      setFormData((prev) => ({
+        ...prev,
+        name: currentUser.displayName || prev.name,
+        email: currentUser.email || prev.email,
+      }));
+    }
+  }, [currentUser]);
 
   return (
     <>
@@ -86,10 +110,39 @@ const Cart: React.FC = () => {
                 </div>
                 <form onSubmit={handleCheckout}>
                     <div className="space-y-3 mb-4">
-                        <input type="text" placeholder="Full Name" required className="w-full p-3 border border-brand-accent rounded-full font-sans text-sm focus:ring-2 focus:ring-brand-primary focus:outline-none" />
-                        <input type="email" placeholder="Email Address" required className="w-full p-3 border border-brand-accent rounded-full font-sans text-sm focus:ring-2 focus:ring-brand-primary focus:outline-none" />
-                        <textarea placeholder="Shipping Address" rows={2} required className="w-full p-3 border border-brand-accent rounded-2xl font-sans text-sm focus:ring-2 focus:ring-brand-primary focus:outline-none"></textarea>
+                        <input
+                            type="text"
+                            name="name"
+                            placeholder="Full Name"
+                            value={formData.name}
+                            onChange={handleInputChange}
+                            required
+                            className="w-full p-3 border border-brand-accent rounded-full font-sans text-sm focus:ring-2 focus:ring-brand-primary focus:outline-none"
+                        />
+                        <input
+                            type="email"
+                            name="email"
+                            placeholder="Email Address"
+                            value={formData.email}
+                            onChange={handleInputChange}
+                            required
+                            className="w-full p-3 border border-brand-accent rounded-full font-sans text-sm focus:ring-2 focus:ring-brand-primary focus:outline-none"
+                        />
+                        <textarea
+                            name="address"
+                            placeholder="Shipping Address"
+                            rows={2}
+                            value={formData.address}
+                            onChange={handleInputChange}
+                            required
+                            className="w-full p-3 border border-brand-accent rounded-2xl font-sans text-sm focus:ring-2 focus:ring-brand-primary focus:outline-none"
+                        ></textarea>
                     </div>
+                    {currentUser && (
+                        <p className="text-xs text-brand-primary mb-4 font-sans">
+                            Logged in as: {currentUser.displayName || currentUser.email}
+                        </p>
+                    )}
                     <Button type="submit" className="w-full flex justify-center items-center" disabled={isCheckingOut}>
                         {isCheckingOut ? <SpinnerIcon /> : 'Proceed to Checkout'}
                     </Button>

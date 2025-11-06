@@ -4,9 +4,11 @@ import Footer from './components/Footer';
 import Hero from './components/Hero';
 import ProductCard from './components/ProductCard';
 import ContactForm from './components/ContactForm';
+import { LoginForm, SignUpForm, GoogleSignInButton } from './components/Auth';
 import { getProducts } from './services/productService';
 import { Product } from './types';
 import { CartProvider } from './context/CartContext';
+import { AuthProvider } from './context/AuthContext';
 import Cart from './components/Cart';
 import Button from './components/Button';
 import StarIcon from './components/icons/StarIcon';
@@ -54,16 +56,18 @@ const App: React.FC = () => {
   };
 
   return (
-    <CartProvider>
-      <div className="bg-brand-background text-brand-text font-sans">
-        <Header onNavigate={handleNavigate} />
-        <main>
-          {renderView()}
-        </main>
-        <Footer />
-        <Cart />
-      </div>
-    </CartProvider>
+    <AuthProvider>
+      <CartProvider>
+        <div className="bg-brand-background text-brand-text font-sans">
+          <Header onNavigate={handleNavigate} />
+          <main>
+            {renderView()}
+          </main>
+          <Footer />
+          <Cart />
+        </div>
+      </CartProvider>
+    </AuthProvider>
   );
 };
 
@@ -270,49 +274,6 @@ const ContactView: React.FC = () => (
 
 const inputClasses = "w-full px-4 py-3 bg-brand-background border border-brand-accent rounded-full font-sans text-sm focus:ring-2 focus:ring-brand-primary focus:outline-none transition-colors";
 
-const LoginForm: React.FC = () => {
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        alert("Login functionality is a demo.");
-    }
-    return (
-        <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
-                <label htmlFor="login-email" className="sr-only">Email</label>
-                <input type="email" id="login-email" placeholder="Email Address" required className={inputClasses} />
-            </div>
-            <div>
-                <label htmlFor="login-password" className="sr-only">Password</label>
-                <input type="password" id="login-password" placeholder="Password" required className={inputClasses} />
-            </div>
-            <Button type="submit" className="w-full">Login</Button>
-        </form>
-    );
-};
-
-const SignUpForm: React.FC = () => {
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        alert("Sign up functionality is a demo.");
-    }
-    return (
-        <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
-                <label htmlFor="signup-name" className="sr-only">Full Name</label>
-                <input type="text" id="signup-name" placeholder="Full Name" required className={inputClasses} />
-            </div>
-             <div>
-                <label htmlFor="signup-email" className="sr-only">Email</label>
-                <input type="email" id="signup-email" placeholder="Email Address" required className={inputClasses} />
-            </div>
-            <div>
-                <label htmlFor="signup-password" className="sr-only">Password</label>
-                <input type="password" id="signup-password" placeholder="Password" required className={inputClasses} />
-            </div>
-            <Button type="submit" className="w-full">Create Account</Button>
-        </form>
-    );
-};
 
 
 const LoginView: React.FC<{onNavigate: (view: View) => void}> = ({onNavigate}) => {
@@ -322,6 +283,10 @@ const LoginView: React.FC<{onNavigate: (view: View) => void}> = ({onNavigate}) =
         e.preventDefault();
         setIsLoginView(!isLoginView);
     }
+
+    const handleSuccess = () => {
+        onNavigate('home');
+    };
 
     return (
         <Section className="flex justify-center items-center min-h-[calc(100vh-250px)]">
@@ -333,7 +298,18 @@ const LoginView: React.FC<{onNavigate: (view: View) => void}> = ({onNavigate}) =
                     {isLoginView ? 'Sign in to continue' : 'Join the Onluxy family'}
                 </p>
 
-                {isLoginView ? <LoginForm /> : <SignUpForm />}
+                {isLoginView ? <LoginForm onSuccess={handleSuccess} /> : <SignUpForm onSuccess={handleSuccess} />}
+
+                <div className="relative my-6">
+                    <div className="absolute inset-0 flex items-center">
+                        <div className="w-full border-t border-brand-accent"></div>
+                    </div>
+                    <div className="relative flex justify-center text-sm">
+                        <span className="px-2 bg-brand-surface font-sans text-brand-primary">Or continue with</span>
+                    </div>
+                </div>
+
+                <GoogleSignInButton onSuccess={handleSuccess} />
 
                 <div className="text-center mt-6">
                     <button onClick={toggleView} className="font-sans text-sm text-brand-primary hover:underline hover:text-brand-text transition-colors">
